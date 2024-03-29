@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Security.Principal;
 
 namespace Shell
@@ -67,9 +68,92 @@ namespace Shell
         {
             if(commands.Length == 1)
             {
+                Console.WriteLine($"\nDirectory: {_currentDirectory} \n");
+
                 ShowDirectories(_currentDirectory);
                 ShowFiles(_currentDirectory);
+
+                Console.WriteLine("\n");
             }
+
+            /*&& commands[1].StartsWith(".")*/
+
+            if (commands.Length > 1 && commands[1].ToLower().StartsWith("c:") || commands[1].ToLower().StartsWith("/"))
+            {
+                ShowDirCommand(commands[1]);
+            }
+            if(commands.Length > 1 && commands[1].ToLower().StartsWith("./"))
+            {
+                // Todo
+
+
+            }
+            else
+            {
+                LogError("error");
+            }
+
+        }
+
+        private void ShowDirCommand(string v)
+        {
+            if (!Directory.Exists(v))
+            {
+                LogError($"Directory {v} does not exist.");
+            }
+
+            if (!IsPathNormilised(v))
+            {
+
+                string NormalisedPath;
+                string[] pathDirectories = v.Split('/');
+
+                if (v.ToLower().StartsWith("c:"))
+                {
+
+                    pathDirectories = pathDirectories.Skip(1).ToArray();
+
+                    NormalisedPath = GetNormalisedPath(pathDirectories);
+
+                }
+
+                else
+                {
+                    NormalisedPath = GetNormalisedPath(pathDirectories);
+                }
+
+
+                Console.WriteLine($"\nDirectory: {NormalisedPath} \n");
+
+                ShowDirectories(NormalisedPath);
+                ShowFiles(NormalisedPath);
+
+                Console.WriteLine("\n");
+
+                return;
+            }
+
+            Console.WriteLine($"\nDirectory: {v} \n");
+
+            ShowDirectories(v);
+            ShowFiles(v);
+
+            Console.WriteLine("\n");
+        }
+
+        private bool IsPathNormilised(string v)
+        {
+            return v.Contains('\\') ? true : false;
+        }
+
+        private string GetNormalisedPath(string[] path)
+        {
+            return "C:\\" + Path.Combine(path);
+        }
+
+        private void LogError(string error)
+        {
+            Console.WriteLine(error);
         }
 
         private void ShowFiles(string pathToDirectory)
