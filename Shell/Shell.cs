@@ -74,25 +74,57 @@ namespace Shell
                 ShowFiles(_currentDirectory);
 
                 Console.WriteLine("\n");
+
+                return;
             }
 
             /*&& commands[1].StartsWith(".")*/
 
-            if (commands.Length > 1 && commands[1].ToLower().StartsWith("c:") || commands[1].ToLower().StartsWith("/"))
+            if (IsPathAbsolute(commands))
             {
+                if (!IsPathNormilised(commands[1]))
+                {
+                    commands[1] = NormalisePath(commands[1]);
+                }
+
                 ShowDirCommand(commands[1]);
+                return;
             }
-            if(commands.Length > 1 && commands[1].ToLower().StartsWith("./"))
+            if(IsPathRelative(commands))
             {
                 // Todo
-
-
+                // join with current dir
+                return;
             }
-            else
+            LogError("error");
+            return;
+
+        }
+
+        private string NormalisePath(string v)
+        {
+            string[] pathDirectories = v.Split('/');
+
+            if (v.ToLower().StartsWith("c:"))
             {
-                LogError("error");
+
+                pathDirectories = pathDirectories.Skip(1).ToArray();
+
+                return GetNormalisedPath(pathDirectories);
+
             }
 
+            return GetNormalisedPath(pathDirectories);
+        }
+
+        private bool IsPathAbsolute(string[] commands)
+        {
+            return commands.Length > 1 && commands[1].ToLower().StartsWith("c:") || commands[1].StartsWith("/") || commands[1].StartsWith("\\");
+        }
+
+        private bool IsPathRelative(string[] commands)
+        {
+            return commands.Length > 1 && commands[1].StartsWith(".") || commands[1].StartsWith("..");
         }
 
         private void ShowDirCommand(string v)
@@ -102,36 +134,6 @@ namespace Shell
                 LogError($"Directory {v} does not exist.");
             }
 
-            if (!IsPathNormilised(v))
-            {
-
-                string NormalisedPath;
-                string[] pathDirectories = v.Split('/');
-
-                if (v.ToLower().StartsWith("c:"))
-                {
-
-                    pathDirectories = pathDirectories.Skip(1).ToArray();
-
-                    NormalisedPath = GetNormalisedPath(pathDirectories);
-
-                }
-
-                else
-                {
-                    NormalisedPath = GetNormalisedPath(pathDirectories);
-                }
-
-
-                Console.WriteLine($"\nDirectory: {NormalisedPath} \n");
-
-                ShowDirectories(NormalisedPath);
-                ShowFiles(NormalisedPath);
-
-                Console.WriteLine("\n");
-
-                return;
-            }
 
             Console.WriteLine($"\nDirectory: {v} \n");
 
@@ -148,7 +150,7 @@ namespace Shell
 
         private string GetNormalisedPath(string[] path)
         {
-            return "C:\\" + Path.Combine(path);
+            return "\\" + Path.Combine(path);
         }
 
         private void LogError(string error)
